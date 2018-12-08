@@ -6,9 +6,16 @@ function( target_precompiled_header pch_target pch_file )
 	message( STATUS "${pch_target}")
 
 	get_filename_component( pch_name ${pch_file} NAME_WE )
-	set( pch_h "${pch_file}" )
-	set( pch_cpp "${pch_name}.cpp" )
-	set( pch_pch "${pch_name}.pch" )
+	get_filename_component( pch_dir ${pch_file} DIRECTORY )
+	set( pch_h "${pch_file}" ) # StdAfx.h or Dir1/Dir2/StdAfx.h
+	set( pch_pure_h "${pch_name}.h" ) # StdAfx.h NOT Dir1/Dir2/StdAfx.h
+	# set path to cpp next to h
+	if( pch_dir )
+		set( pch_cpp "${pch_dir}/${pch_name}.cpp" )
+	else()
+		set( pch_cpp "${pch_name}.cpp" )
+	endif()
+	set( pch_pch "${pch_name}.pch" ) # just StdAfx.pch
 
 	get_target_property( srcs ${pch_target} SOURCES )
 
@@ -23,21 +30,22 @@ function( target_precompiled_header pch_target pch_file )
 			endif()
 
 			if( src MATCHES \\.\(cpp|cxx|cc\)$ )
-				# kompilacja stdafx cppka i ustawienie outputa - tu jest problem z ninja i OBJECT_OUTPUTS - olewa to
-				if( src_name STREQUAL ${pch_cpp} )
-					# cppk pch znaleziony
+				# precompiled cpp
+				if( ${src} MATCHES .*${pch_cpp}$ )
+					if( pch_cpp_found )
+						message( FATAL_ERROR "Too many ${pch_file} in ${pch_target}")
+					endif()
 					set( pch_cpp_found TRUE )
 					set_property( SOURCE ${src} APPEND PROPERTY OBJECT_OUTPUTS "${pch_out}" )
-					set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /Yc${pch_h} /Fp${pch_out}" )
-				# zwykly plik cpp
+					set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /Yc${pch_pure_h} /Fp${pch_out}" )
+				# common cpp
 				else()
-					# jest cppk wiec cppk pch potrzebny bo tak chce Visual
 					set( pch_cpp_needed TRUE )
 					set_property( SOURCE ${src} APPEND PROPERTY OBJECT_DEPENDS "${pch_out}" )
-					set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /Yu${pch_h} /Fp${pch_out}" )
+					set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /Yu${pch_pure_h} /Fp${pch_out}" )
 
 					if( pch_FORCE_INCLUDE )
-						set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /FI${pch_h}" )
+						set_property( SOURCE ${src} APPEND_STRING PROPERTY COMPILE_FLAGS " /FI${pch_pure_h}" )
 					endif()
 				endif()
 			endif()
@@ -47,7 +55,7 @@ function( target_precompiled_header pch_target pch_file )
 			message( FATAL_ERROR "${pch_cpp} is required by MSVC" )
 		endif()
 
-		message( STATUS "Precompiled headers enabled for ${pch_target}" )
+		message( STATUS "Precompiled header enabled for ${pch_target}" )
 	endif()
 
 endfunction()
