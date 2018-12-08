@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.10 )
 
-function( add_precompiled_header pch_target pch_file )
+function( target_precompiled_header pch_target pch_file )
 	cmake_parse_arguments( pch "FORCE_INCLUDE" "" "EXCLUDE_LIST" ${ARGN} )
 
 	message( STATUS "${pch_target}")
