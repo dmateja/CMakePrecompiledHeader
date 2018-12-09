@@ -8,12 +8,12 @@ function( target_precompiled_header pch_target pch_file )
 	get_filename_component( pch_name ${pch_file} NAME_WE )
 	get_filename_component( pch_dir ${pch_file} DIRECTORY )
 	set( pch_h "${pch_file}" ) # StdAfx.h or Dir1/Dir2/StdAfx.h
-	set( pch_pure_h "${pch_name}.h" ) # StdAfx.h NOT Dir1/Dir2/StdAfx.h
-	# set path to cpp next to h
+	set( pch_pure_h "${pch_name}.h" ) # just StdAfx.h NOT Dir1/Dir2/StdAfx.h
+	# set path to c/cc/cpp/cxx next to h
 	if( pch_dir )
-		set( pch_cpp "${pch_dir}/${pch_name}.cpp" )
+		set( pch_cpp_reg ".*${pch_dir}/${pch_name}.\(cpp|cc|c\)$" )
 	else()
-		set( pch_cpp "${pch_name}.cpp" )
+		set( pch_cpp_reg ".*${pch_name}.\(cpp|cxx|cc|c\)$" )
 	endif()
 	set( pch_pch "${pch_name}.pch" ) # just StdAfx.pch
 
@@ -29,9 +29,9 @@ function( target_precompiled_header pch_target pch_file )
 				continue()
 			endif()
 
-			if( src MATCHES \\.\(cpp|cxx|cc\)$ )
+			if( src MATCHES \\.\(cpp|cxx|cc|c\)$ )
 				# precompiled cpp
-				if( ${src} MATCHES .*${pch_cpp}$ )
+				if( ${src} MATCHES ${pch_cpp_reg} )
 					if( pch_cpp_found )
 						message( FATAL_ERROR "Too many ${pch_file} in ${pch_target}")
 					endif()
