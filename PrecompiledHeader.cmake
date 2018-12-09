@@ -5,21 +5,24 @@ function( target_precompiled_header pch_target pch_file )
 
 	message( STATUS "${pch_target}")
 
-	get_filename_component( pch_name ${pch_file} NAME_WE )
+	get_filename_component( pch_name ${pch_file} NAME )
+	get_filename_component( pch_name_we ${pch_file} NAME_WE )
 	get_filename_component( pch_dir ${pch_file} DIRECTORY )
 	set( pch_h "${pch_file}" ) # StdAfx.h or Dir1/Dir2/StdAfx.h
-	set( pch_pure_h "${pch_name}.h" ) # just StdAfx.h NOT Dir1/Dir2/StdAfx.h
-	# set path to c/cc/cpp/cxx next to h
-	if( pch_dir )
-		set( pch_cpp_reg ".*${pch_dir}/${pch_name}.\(cpp|cc|c\)$" )
-	else()
-		set( pch_cpp_reg ".*${pch_name}.\(cpp|cxx|cc|c\)$" )
-	endif()
-	set( pch_pch "${pch_name}.pch" ) # just StdAfx.pch
+	set( pch_pure_h "${pch_name}" ) # just StdAfx.h NOT Dir1/Dir2/StdAfx.h
+
+	set( pch_pch "${pch_name}.pch" ) # just StdAfx.h.pch
 
 	get_target_property( srcs ${pch_target} SOURCES )
 
 	if( CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" )
+		# set path to c/cc/cpp/cxx next to h
+		if( pch_dir )
+			set( pch_cpp_reg ".*${pch_dir}/${pch_name_we}.\(cpp|cc|c\)$" )
+		else()
+			set( pch_cpp_reg ".*${pch_name_we}.\(cpp|cxx|cc|c\)$" )
+		endif()
+
 		set( pch_out "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${pch_target}.dir/${pch_pch}" )
 
 		foreach( src ${srcs} )
@@ -56,6 +59,12 @@ function( target_precompiled_header pch_target pch_file )
 		endif()
 
 		message( STATUS "Precompiled header enabled for ${pch_target}" )
+	endif()
+
+	if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
+		set( pch_out "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${pch_target}.dir/${pch_pch}" )
+
+
 	endif()
 
 endfunction()
