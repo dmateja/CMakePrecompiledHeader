@@ -81,7 +81,7 @@ function( target_precompiled_header pch_target pch_file )
 		endforeach()
 
 		if( pch_cpp_needed AND NOT pch_cpp_found )
-			message( FATAL_ERROR "${pch_cpp} is required by MSVC" )
+			message( FATAL_ERROR "Cpp ${pch_cpp} is required by MSVC" )
 		endif()
 
 		message( STATUS "Precompiled header enabled for ${pch_target}" )
@@ -183,6 +183,9 @@ function( target_precompiled_header pch_target pch_file )
 		# add_compile_definitions writes only to directory
 
 		get_target_property( tar_comp_opt ${pch_target} COMPILE_OPTIONS )
+		if( NOT tar_comp_opt )
+			set( tar_comp_opt "" )
+		endif()
 
 		get_directory_property( dir_comp_def COMPILE_DEFINITIONS )
 		if( dir_comp_def )
