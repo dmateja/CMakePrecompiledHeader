@@ -1,0 +1,5 @@
+add_executable( proj src/main.cpp src/StdAfx.cpp )
+target_include_directories( proj PRIVATE include )
+#add_dependencies( proj l1 l2 )
+target_link_libraries( proj l1 l2 )
+target_precompiled_header( proj src/StdAfx.h )
