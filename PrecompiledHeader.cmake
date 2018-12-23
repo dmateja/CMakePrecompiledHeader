@@ -205,6 +205,11 @@ function( target_precompiled_header pch_target pch_file )
 
 		# add command to copy precompiled header and compile it
 
+		set( dane "${pch_out_dir}/test.txt" )
+		set( prop1 "$<TARGET_PROPERTY:${pch_target},INCLUDE_DIRECTORIES>" )
+		set( prop1 "$<$<BOOL:${prop1}>:-I$<JOIN:${prop1},\n-I>\n>" )
+		file( GENERATE OUTPUT "${dane}" CONTENT "${prop}" )
+
 		add_custom_command(
 			OUTPUT "${pch_out_h}" 
 			COMMAND "${CMAKE_COMMAND}" -E copy "${pch_h_in}" "${pch_out_h}"
