@@ -163,28 +163,15 @@ function( target_precompiled_header pch_target pch_file )
 			set( tar_comp_opt "" )
 		endif()
 
-		get_directory_property( dir_comp_def COMPILE_DEFINITIONS )
-		if( dir_comp_def )
-			string( REPLACE ";" ";-D" dir_comp_def "${dir_comp_def}" )
-			set( dir_comp_def "-D${dir_comp_def}" )
-		elseif()
-			set( dir_comp_def "" )
-		endif()
-
-		get_target_property( tar_comp_def ${pch_target} COMPILE_DEFINITIONS )
-		if( tar_comp_def )
-			string( REPLACE ";" ";-D" tar_comp_def "${tar_comp_def}" )
-			set( tar_comp_def "-D${tar_comp_def}" )
-		else()
-			set( tar_comp_def "" )
-		endif()
-
 		# file with compilation options
 		set( pch_opt "${pch_out_dir}/${pch_pch}.opt" )
 		# write include directories to file
-		set( _opt "$<TARGET_PROPERTY:${pch_target},INCLUDE_DIRECTORIES>" )
-		set( _opt "$<$<BOOL:${_opt}>:-I$<JOIN:${_opt},\n-I>\n>" )
-		file( GENERATE OUTPUT "${pch_opt}" CONTENT "${_opt}" )
+		# TODO: problem with -isystem - now is -I
+		set( _inc_def "$<TARGET_PROPERTY:${pch_target},INCLUDE_DIRECTORIES>" )
+		set( _inc_def "$<$<BOOL:${_inc_def}>:-I$<JOIN:${_inc_def},\n-I>\n>" )
+		set( _comp_def "$<TARGET_PROPERTY:${pch_target},COMPILE_DEFINITIONS>" )
+		set( _comp_def "$<$<BOOL:${_comp_def}>:-D$<JOIN:${_comp_def},\n-D>\n>" )
+		file( GENERATE OUTPUT "${pch_opt}" CONTENT "${_inc_def}${_comp_def}" )
 
 		# add command to copy precompiled header and compile it
 
@@ -197,8 +184,8 @@ function( target_precompiled_header pch_target pch_file )
 		# clang can read options from file by "@path_to_file"
 		add_custom_command(
 			OUTPUT "${pch_out}"
-			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" ${_cxx_standard} ${main_cmake_cxx_flags} ${current_build_cxx_flags} ${dir_comp_def} ${tar_comp_def} ${tar_comp_opt} ${_pic} -x c++-header ${pch_h_in} -o ${pch_out}
-			DEPENDS "${pch_out_h}" "${dane}"
+			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" ${_cxx_standard} ${main_cmake_cxx_flags} ${current_build_cxx_flags} ${tar_comp_opt} ${_pic} -x c++-header ${pch_h_in} -o ${pch_out}
+			DEPENDS "${pch_out_h}" "${pch_opt}" "${aa}"
 			COMMENT "Compiling precompiled header"
 		)
 

@@ -9,3 +9,15 @@
 
 #include <lib1.h>
 #include <lib2.h>
+
+#ifdef LIB1_CD
+inline bool is_lib1() { return true; };
+#endif
+
+#ifdef PROJ_CD
+inline bool is_proj() { return true; };
+#endif
+
+#ifdef GLOB_CD
+inline bool is_glob_cd() { return true; };
+#endif
