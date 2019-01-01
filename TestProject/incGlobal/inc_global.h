@@ -1,6 +1,3 @@
 #pragma once
 
-inline int funGlobal( int a, int b )
-{
-	return a + b;
-}
+static const int INT_GLOB = 1;
