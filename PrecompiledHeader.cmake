@@ -158,11 +158,6 @@ function( target_precompiled_header pch_target pch_file )
 			endif()
 		endif()
 
-		get_target_property( tar_comp_opt ${pch_target} COMPILE_OPTIONS )
-		if( NOT tar_comp_opt )
-			set( tar_comp_opt "" )
-		endif()
-
 		# file with compilation options
 		set( pch_opt "${pch_out_dir}/${pch_pch}.opt" )
 		# write include directories to file
@@ -171,7 +166,9 @@ function( target_precompiled_header pch_target pch_file )
 		set( _inc_def "$<$<BOOL:${_inc_def}>:-I$<JOIN:${_inc_def},\n-I>\n>" )
 		set( _comp_def "$<TARGET_PROPERTY:${pch_target},COMPILE_DEFINITIONS>" )
 		set( _comp_def "$<$<BOOL:${_comp_def}>:-D$<JOIN:${_comp_def},\n-D>\n>" )
-		file( GENERATE OUTPUT "${pch_opt}" CONTENT "${_inc_def}${_comp_def}" )
+		set( _comp_opt "$<TARGET_PROPERTY:${pch_target},COMPILE_OPTIONS>" )
+		set( _comp_opt "$<$<BOOL:${_comp_opt}>:$<JOIN:${_comp_opt},\n>\n>" )
+		file( GENERATE OUTPUT "${pch_opt}" CONTENT "${_inc_def}${_comp_def}${_comp_opt}" )
 
 		# add command to copy precompiled header and compile it
 
@@ -184,7 +181,7 @@ function( target_precompiled_header pch_target pch_file )
 		# clang can read options from file by "@path_to_file"
 		add_custom_command(
 			OUTPUT "${pch_out}"
-			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" ${_cxx_standard} ${main_cmake_cxx_flags} ${current_build_cxx_flags} ${tar_comp_opt} ${_pic} -x c++-header ${pch_h_in} -o ${pch_out}
+			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" ${_cxx_standard} ${main_cmake_cxx_flags} ${current_build_cxx_flags} ${_pic} -x c++-header ${pch_h_in} -o ${pch_out}
 			DEPENDS "${pch_out_h}" "${pch_opt}" "${aa}"
 			COMMENT "Compiling precompiled header"
 		)

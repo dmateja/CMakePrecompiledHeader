@@ -11,6 +11,9 @@ int main()
 	std::cout << is_proj() << std::endl;
 	std::cout << is_glob_cd() << std::endl;
 	std::cout << is_glob_cd_add() << std::endl;
+	std::cout << is_lib1_co() << std::endl;
+	std::cout << is_glob_co() << std::endl;
+	std::cout << is_proj_co() << std::endl;
 	//i + 3;
 	return 0;
 }

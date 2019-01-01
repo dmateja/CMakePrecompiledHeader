@@ -11,17 +11,29 @@
 #include <lib2.h>
 
 #ifdef LIB1_CD
-inline bool is_lib1() { return true; };
+inline bool is_lib1() { return true; }
 #endif
 
 #ifdef PROJ_CD
-inline bool is_proj() { return true; };
+inline bool is_proj() { return true; }
 #endif
 
 #ifdef GLOB_CD
-inline bool is_glob_cd() { return true; };
+inline bool is_glob_cd() { return true; }
 #endif
 
 #ifdef GLOB_CD_ADD
 inline bool is_glob_cd_add() { return true; }
+#endif
+
+#ifdef LIB1_CO
+inline bool is_lib1_co() { return true; }
+#endif
+
+#ifdef GLOB_CO
+inline bool is_glob_co() { return true; }
+#endif
+
+#ifdef PROJ_CO
+inline bool is_proj_co() { return true; }
 #endif
