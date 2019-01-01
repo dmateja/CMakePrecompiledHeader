@@ -10,6 +10,7 @@ int main()
 	std::cout << is_lib1() << std::endl;
 	std::cout << is_proj() << std::endl;
 	std::cout << is_glob_cd() << std::endl;
+	std::cout << is_glob_cd_add() << std::endl;
 	//i + 3;
 	return 0;
 }

@@ -21,3 +21,7 @@ inline bool is_proj() { return true; };
 #ifdef GLOB_CD
 inline bool is_glob_cd() { return true; };
 #endif
+
+#ifdef GLOB_CD_ADD
+inline bool is_glob_cd_add() { return true; }
+#endif
