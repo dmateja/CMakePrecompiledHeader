@@ -29,8 +29,6 @@ cmake_minimum_required( VERSION 3.12 )
 function( target_precompiled_header pch_target pch_file )
 	cmake_parse_arguments( pch "FORCE_INCLUDE" "" "EXCLUDE_LIST" ${ARGN} )
 
-	message( STATUS "${pch_target}")
-
 	get_filename_component( pch_name ${pch_file} NAME )
 	get_filename_component( pch_name_we ${pch_file} NAME_WE )
 	get_filename_component( pch_dir ${pch_file} DIRECTORY )
@@ -101,19 +99,6 @@ function( target_precompiled_header pch_target pch_file )
 		if( for_check )
 			message( FATAL_ERROR "COMPILE_FLAGS is deprecated and not supported by precompiled headers: ${for_check}" )
 		endif()
-		foreach( src ${srcs} )
-			get_filename_component( src_name "${src}" NAME )
-			
-			if( ${src_name} IN_LIST pch_EXCLUDE_LIST )
-				continue()
-			endif()
-
-			get_source_file_property( for_check ${src} COMPILE_FLAGS )
-			if( for_check )
-				message( FATAL_ERROR "COMPILE_FLAGS is deprecated and not supported by precompiled headers: ${for_check}" )
-			endif()
-		endforeach()
-
 
 		### prepare
 
@@ -125,42 +110,11 @@ function( target_precompiled_header pch_target pch_file )
 		set( main_cmake_cxx_flags ${CMAKE_CXX_FLAGS} )
 		separate_arguments( main_cmake_cxx_flags )
 
-		get_target_property( tar_cxx_stand ${pch_target} CXX_STANDARD )		
-		get_target_property( tar_cxx_ext ${pch_target} CXX_EXTENSIONS )
-		set( _cxx_standard "" )
-		if( tar_cxx_stand )
-			if( tar_cxx_ext )
-				set( _cxx_standard "-std=gnu++${tar_cxx_stand}" )
-			else()
-				set( _cxx_standard "-std=c++${tar_cxx_stand}" )
-			endif()
-		endif()
-
-		get_target_property( tar_pic ${pch_target} POSITION_INDEPENDENT_CODE )
-		get_target_property( tar_type ${pch_target} TYPE )
-		set( _pic "" )
-		if( tar_type STREQUAL EXECUTABLE )
-			set( _pic "-fno-PIE" )
-			if( tar_pic )
-				set( _pic "-fPIE")
-			endif()
-		elseif( tar_type STREQUAL SHARED )
-			#set( _pic "-fno-PIC" )
-			if( tar_pic )
-				set( _pic "-fPIC")
-			else()
-				message( FATAL_ERROR "There is no PIC enabled for SHARED" )
-			endif()
-		else()
-			set( _pic "-fno-PIC" )
-			if( tar_pic )
-				set( _pic "-fPIC")
-			endif()
-		endif()
-
 		# file with compilation options
 		set( pch_opt "${pch_out_dir}/${pch_pch}.opt" )
-		# write include directories to file
+		set( _tar_type "$<TARGET_PROPERTY:${pch_target},TYPE>" )
+		set( _tar_pic "$<BOOL:$<TARGET_PROPERTY:${pch_target},POSITION_INDEPENDENT_CODE>>" )
+		set( _tar_pic "$<IF:$<STREQUAL:${_tar_type},EXECUTABLE>,$<IF:${_tar_pic},-fPIE\n,-fno-PIE\n>,$<IF:${_tar_pic},-fPIC\n,-fno-PIC\n>>" )
 		# TODO: problem with -isystem - now is -I
 		set( _inc_def "$<TARGET_PROPERTY:${pch_target},INCLUDE_DIRECTORIES>" )
 		set( _inc_def "$<$<BOOL:${_inc_def}>:-I$<JOIN:${_inc_def},\n-I>\n>" )
@@ -168,26 +122,31 @@ function( target_precompiled_header pch_target pch_file )
 		set( _comp_def "$<$<BOOL:${_comp_def}>:-D$<JOIN:${_comp_def},\n-D>\n>" )
 		set( _comp_opt "$<TARGET_PROPERTY:${pch_target},COMPILE_OPTIONS>" )
 		set( _comp_opt "$<$<BOOL:${_comp_opt}>:$<JOIN:${_comp_opt},\n>\n>" )
-		file( GENERATE OUTPUT "${pch_opt}" CONTENT "${_inc_def}${_comp_def}${_comp_opt}" )
+		set( main_cmake_cxx_flags "$<$<BOOL:${main_cmake_cxx_flags}>:$<JOIN:${main_cmake_cxx_flags},\n>\n>" )
+		set( current_build_cxx_flags "$<$<BOOL:${current_build_cxx_flags}>:$<JOIN:${current_build_cxx_flags},\n>\n>" )
+		# TODO: add CMAKE_CXX_STANDARD_REQUIRED
+		set( _cxx_standard "$<TARGET_PROPERTY:${pch_target},CXX_STANDARD>" )
+		set( _cxx_extensions "$<BOOL:$<TARGET_PROPERTY:${pch_target},CXX_EXTENSIONS>>" )
+		set( _cxx_standard "$<IF:$<BOOL:${_cxx_standard}>,$<IF:${_cxx_extensions},-std=gnu++${_cxx_standard}\n,-std=c++${_cxx_standard}\n>,>" )
+
+		file( GENERATE OUTPUT "${pch_opt}" CONTENT
+			"${_cxx_standard}${main_cmake_cxx_flags}${_tar_pic}${current_build_cxx_flags}${_inc_def}${_comp_def}${_comp_opt}" )
 
 		# add command to copy precompiled header and compile it
-
 		add_custom_command(
 			OUTPUT "${pch_out_h}" 
 			COMMAND "${CMAKE_COMMAND}" -E copy "${pch_h_in}" "${pch_out_h}"
 			COMMENT "Coping precompiled header"
 		)
-
 		# clang can read options from file by "@path_to_file"
 		add_custom_command(
 			OUTPUT "${pch_out}"
-			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" ${_cxx_standard} ${main_cmake_cxx_flags} ${current_build_cxx_flags} ${_pic} -x c++-header ${pch_h_in} -o ${pch_out}
-			DEPENDS "${pch_out_h}" "${pch_opt}" "${aa}"
+			COMMAND ${CMAKE_CXX_COMPILER} "@${pch_opt}" -x c++-header ${pch_h_in} -o ${pch_out}
+			DEPENDS "${pch_out_h}" "${pch_opt}"
 			COMMENT "Compiling precompiled header"
 		)
 
 		# set dependencies to precompiled header
-
 		foreach( src ${srcs} )
 			get_filename_component( src_name "${src}" NAME )
 			
