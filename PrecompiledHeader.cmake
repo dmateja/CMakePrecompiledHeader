@@ -136,7 +136,7 @@ function( target_precompiled_header pch_target pch_file )
 		add_custom_command(
 			OUTPUT "${pch_out_h}" 
 			COMMAND "${CMAKE_COMMAND}" -E copy "${pch_h_in}" "${pch_out_h}"
-			COMMENT "Coping precompiled header"
+			COMMENT "Copying precompiled header"
 		)
 		# clang can read options from file by "@path_to_file"
 		add_custom_command(
