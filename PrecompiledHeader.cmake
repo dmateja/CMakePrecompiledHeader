@@ -35,6 +35,9 @@ function( target_precompiled_header pch_target pch_file )
 	set( pch_h "${pch_file}" ) # StdAfx.h or Dir1/Dir2/StdAfx.h
 	set( pch_pure_h "${pch_name}" ) # just StdAfx.h NOT Dir1/Dir2/StdAfx.h
 	set( pch_pch "${pch_name}.pch" ) # just StdAfx.h.pch
+	if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
+		set( pch_pch "${pch_name}.gch" ) # just StdAfx.h.gch
+	endif()
 	set( pch_out_dir "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${pch_target}.dir" )
 
 	get_target_property( srcs ${pch_target} SOURCES )
@@ -85,7 +88,7 @@ function( target_precompiled_header pch_target pch_file )
 		message( STATUS "Precompiled header enabled for ${pch_target}" )
 	endif()
 
-	if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
+	if( CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND UNIX )
 		set( pch_out_h "${pch_out_dir}/${pch_name}" )
 		set( pch_out "${pch_out_dir}/${pch_pch}" )
 		set( pch_h_in "${CMAKE_CURRENT_SOURCE_DIR}/${pch_file}")
